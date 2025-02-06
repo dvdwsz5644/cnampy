@@ -6,8 +6,12 @@ app = Flask(__name__)
 
 # Telebroad API credentials
 TELEBROAD_API_URL = "https://webserv.telebroad.com/api/teleconsole/rest/cnam?number="
-USERNAME = "dweiss@telebroad.com"
-PASSWORD = "dave0238676"
+
+import os
+
+USERNAME = os.getenv("USERNAME")
+PASSWORD = os.getenv("PASSWORD")
+
 
 @app.route('/lookup', methods=['GET'])
 def lookup_number():
