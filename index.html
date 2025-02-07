@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caller ID Lookup</title>
+    <link rel="icon" type="image/png" href="https://www.telebroad.com/favicon.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-gray-400 via-gray-500 to-gray-700 text-white flex flex-col items-center justify-center min-h-screen p-4">
+    <img src="logo.png" alt="Company Logo" class="w-40 mb-6">
+    <h2 class="text-3xl font-bold mb-4 uppercase text-gray-300">📞 Caller ID Lookup</h2>
+    
+    <div class="w-full max-w-sm">
+        <input type="text" id="phoneNumber" placeholder="Enter phone number" 
+            class="w-full p-4 text-lg text-black rounded-full shadow-md focus:ring-2 focus:ring-yellow-400 outline-none text-center" 
+            autofocus>
+        
+        <button onclick="fetchCallerName()" 
+            class="mt-4 w-full py-3 bg-yellow-400 text-black font-bold text-lg rounded-full shadow-lg hover:bg-yellow-500 transition-transform transform hover:scale-105">
+            <span class="text-gray-700">🔍</span> Check Caller Name
+        </button>
+    </div>
+    
+    <div id="result" class="hidden mt-6 p-4 bg-white bg-opacity-20 rounded-lg shadow-md text-lg font-bold text-center"></div>
+    
+    <button id="callButton" onclick="initiateCall()" 
+        class="hidden mt-4 px-6 py-3 bg-green-500 text-white font-bold text-lg rounded-full shadow-lg hover:bg-green-600 transition-transform transform hover:scale-105">
+        <span class="text-gray-700">📞</span> Click to Call
+    </button>
+    
+<script>
+    function cleanPhoneNumber(phone) {
+        return phone.replace(/\D/g, ''); // Remove non-numeric characters
+    }
+
+    function formatPhoneNumber(value) {
+        let cleaned = cleanPhoneNumber(value);
+        let formattedNumber = '';
+
+        if (cleaned.length <= 10) {
+            // Standard 10-digit format
+            if (cleaned.length >= 1) formattedNumber = '(' + cleaned.substring(0, 3);
+            if (cleaned.length >= 4) formattedNumber += ') ' + cleaned.substring(3, 6);
+            if (cleaned.length >= 7) formattedNumber += '-' + cleaned.substring(6, 10);
+        } else {
+            // Extra digits should appear before the area code
+            let extraDigits = cleaned.substring(0, cleaned.length - 10);
+            let mainNumber = cleaned.substring(cleaned.length - 10);
+            formattedNumber = extraDigits + ' (' + mainNumber.substring(0, 3) + ') ' + mainNumber.substring(3, 6) + '-' + mainNumber.substring(6, 10);
+        }
+
+        return formattedNumber;
+    }
+
+    document.getElementById("phoneNumber").addEventListener("input", function (event) {
+        let input = event.target;
+        let cleaned = cleanPhoneNumber(input.value);
+        input.value = formatPhoneNumber(cleaned);
+    });
+
+    function fetchCallerName() {
+        let phoneNumber = document.getElementById("phoneNumber").value.trim();
+        phoneNumber = cleanPhoneNumber(phoneNumber);
+
+        if (phoneNumber.length < 10) {
+            alert("Please enter a valid phone number (at least 10 digits).");
+            return;
+        }
+
+        let apiUrl = `https://cnampy.onrender.com/lookup?number=${phoneNumber}`;
+        let proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`;
+
+        fetch(proxyUrl)
+            .then(response => response.json())
+            .then(data => {
+                let parsedData = JSON.parse(data.contents);
+                let callerName = parsedData.result ? parsedData.result.trim() : "Not Found";
+
+                let resultDiv = document.getElementById("result");
+                let callButton = document.getElementById("callButton");
+
+                resultDiv.innerHTML = `<span class='text-gray-700'>📞</span> Caller Name: <strong>${callerName}</strong>`;
+                resultDiv.classList.remove("hidden");
+
+                callButton.classList.remove("hidden");
+                callButton.setAttribute("data-phone", phoneNumber);
+            })
+            .catch(error => {
+                document.getElementById("result").innerHTML = `<p class='text-red-500'>⚠️ Error fetching caller name.</p>`;
+                document.getElementById("result").classList.remove("hidden");
+                console.error("Error:", error);
+            });
+    }
+
+    document.getElementById("phoneNumber").addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            fetchCallerName();
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("year").textContent = new Date().getFullYear();
+    });
+</script>
+
+
+
+    
+    <footer class="mt-6 text-gray-400 text-sm">
+        &copy; <span id="year"></span> Telebroad™. All Rights Reserved.
+    </footer>
+</body>
+</html>
